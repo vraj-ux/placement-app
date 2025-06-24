@@ -1,63 +1,57 @@
-# -*- coding: utf-8 -*-
+# -- coding: utf-8 --
 """
-Created on Tue Jun 24 11:33:26 2025
-
-@author: Vraj
+Created on Tue Jun 24 10:40:00 2025
+@author: vraj
 """
-
 
 import pickle
 import streamlit as st
 
-# Load models
-weather_classification = pickle.load(open("C:/Users/Yash/OneDrive/Desktop/Weather Classification/weather_data.sav", 'rb'))
+# Load the trained model
+placement_model = pickle.load(open("C:/Users/Vraj/OneDrive/Desktop/internship/placement app/placement_model.pkl", 'rb'))
 
-# Diabetes Prediction
+st.set_page_config(page_title="Placement Predictor")
+st.title("Student Placement Prediction App")
 
-st.title('Weather Classification using ML')
-col1, col2, col3 = st.columns(3)
+st.markdown("### Predict if a student will be placed based on academic and personal details.")
 
-with col1:
-    temperature = st.text_input('Enter number of Temperature :', '31')
-with col2:
-    Humidity = st.text_input('Enter Humidity:', '74')
-with col3:
-    wind = st.text_input('Enter Wind Speed:', '14')
-with col1:
-    percipitation = st.text_input('Enter Percipitation:', '73')
-with col2:
-    cloud_cover = st.text_input('Enter Cloud Cover(overcast:0, Party cloudy:1, clear = 2, cloudy:3):', '3')
-with col3:
-    atmosphere = st.text_input('Atmosphere:', '998')
-with col1:
-    uv = st.text_input('UV index:', '3')
-with col2:
-    season = st.text_input('Enter season(winter :0, Spring :1, autumn: 2, Summer:3):', '2')
-with col3:
-    visibility = st.text_input('Enter Visibility:', '11')
-with col3:
-    location = st.text_input('Enter Location type(Inland: 0, Mountain: 1,Coastal: 2):', '2')
-    
-weather_type = ''
-if st.button('Wether Type Result'):
+# --- Input Fields ---
+gender = st.selectbox("Gender", ["Male", "Female"])
+ssc_p = st.slider("SSC Percentage (10th Grade)", 0.0, 100.0, 75.0)
+ssc_b = st.selectbox("SSC Board", ["Central", "Others"])
+hsc_p = st.slider("HSC Percentage (12th Grade)", 0.0, 100.0, 70.0)
+hsc_b = st.selectbox("HSC Board", ["Central", "Others"])
+hsc_s = st.selectbox("HSC Stream", ["Commerce", "Science", "Arts"])
+degree_p = st.slider("Degree Percentage", 0.0, 100.0, 60.0)
+degree_t = st.selectbox("Degree Type", ["Sci&Tech", "Comm&Mgmt", "Others"])
+workex = st.selectbox("Work Experience", ["Yes", "No"])
+etest_p = st.slider("Employability Test Percentage", 0.0, 100.0, 50.0)
+specialisation = st.selectbox("MBA Specialization", ["Mkt&HR", "Mkt&Fin"])
+mba_p = st.slider("MBA Percentage", 0.0, 100.0, 65.0)
+salary = st.number_input("Expected Salary (if any, else leave as 0)", min_value=0.0, value=0.0)
+status = st.selectbox("Placement Status (for training/test only)", ["Placed", "Not Placed"])
+
+# --- Encoding Inputs ---
+gender_encoded = 1 if gender == "Male" else 0
+ssc_b_encoded = 1 if ssc_b == "Central" else 0
+hsc_b_encoded = 1 if hsc_b == "Central" else 0
+hsc_s_encoded = {"Commerce": 0, "Science": 1, "Arts": 2}[hsc_s]
+degree_t_encoded = {"Sci&Tech": 0, "Comm&Mgmt": 1, "Others": 2}[degree_t]
+workex_encoded = 1 if workex == "Yes" else 0
+specialisation_encoded = 1 if specialisation == "Mkt&Fin" else 0
+status_encoded = 1 if status == "Placed" else 0
+
+# --- Prediction ---
+if st.button("Predict Placement Status"):
     try:
-        weather_prediction = weather_classification.predict([[
-            int(temperature), int(Humidity), float(wind),
-            int(percipitation),int(cloud_cover), float(atmosphere), int(uv),
-            int(season), float(visibility), int(location)
+        prediction = placement_model.predict([[
+            gender_encoded, ssc_p, ssc_b_encoded, hsc_p, hsc_b_encoded,
+            hsc_s_encoded, degree_p, degree_t_encoded, workex_encoded,
+            etest_p, specialisation_encoded, mba_p, salary, status_encoded
         ]])
-        if(weather_prediction[0]==0):
-            weather_type ="Rainy"
-        elif(weather_prediction[0]==1):
-            weather_type ="Sunny"
-        elif(weather_prediction[0]==2):
-            weather_type ="Overcast"
-        elif(weather_prediction[0]==3):
-            weather_type ="Cloudy"
-        elif(weather_prediction[0]==4):
-            weather_type = "Snowy "
-          
+        result = "Placed ✅" if prediction[0] == 1 else "Not Placed ❌"
+        st.success(f"Prediction: {result}")
     except Exception as e:
         st.error(f"Error during prediction: {e}")
 
-st.success(weather_type)
+st.markdown("*Note: This prediction is based on historical data and doesn't guarantee future results.*")
