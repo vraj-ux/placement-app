@@ -8,10 +8,7 @@ import pickle
 import streamlit as st
 
 # Load the trained model
-placement_model = pickle.load(open("placement_model.pkl", 'rb'))
-
-st.set_page_config(page_title="Placement Predictor")
-st.title("Student Placement Prediction App")
+placement_model = pickle.load(open("placement app/placement_data.sav", 'rb'))
 
 st.markdown("### Predict if a student will be placed based on academic and personal details.")
 
